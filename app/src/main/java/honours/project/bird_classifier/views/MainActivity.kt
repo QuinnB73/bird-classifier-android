@@ -1,20 +1,29 @@
 package honours.project.bird_classifier.views
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.hardware.camera2.CameraManager
+import android.provider.MediaStore
+import android.view.View
+import android.widget.Toast
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import honours.project.bird_classifier.R
 
 import kotlinx.android.synthetic.main.activity_main.*
+import net.steamcrafted.materialiconlib.MaterialDrawableBuilder
 
 class MainActivity : AppCompatActivity() {
 
     private val PERMISSION_REQUEST_CODE = 0
+    private val IMAGE_REQUEST_CODE = 1
     private val PERMISSION_MAP = mutableMapOf(android.Manifest.permission.CAMERA to false)
 
 
@@ -23,10 +32,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view ->
-            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show()
-        }
+        setupCameraButton(applicationContext)
 
         checkPermissions()
     }
@@ -52,13 +58,38 @@ class MainActivity : AppCompatActivity() {
 
         when(requestCode) {
             PERMISSION_REQUEST_CODE -> {
-                for (i in 0..grantResults.size - 1) {
-                    if(grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        PERMISSION_MAP[permissions[i]] = true
+                grantResults.forEachIndexed { index, result ->
+                    if (result == PackageManager.PERMISSION_GRANTED) {
+                        PERMISSION_MAP[permissions[index]] = true
                     }
                 }
             }
             else -> {}
+        }
+    }
+
+    private fun setupCameraButton(context: Context) {
+        val cameraButton: FloatingActionButton = findViewById(R.id.camera_button)
+        val cameraIcon: Drawable = MaterialDrawableBuilder.with(context)
+            .setIcon(MaterialDrawableBuilder.IconValue.CAMERA)
+            .setColor(Color.WHITE)
+            .setToActionbarSize()
+            .build()
+
+        cameraButton.setImageDrawable(cameraIcon)
+        cameraButton.setOnClickListener(getCameraButtonListener())
+    }
+
+    private fun getCameraButtonListener(): (View) -> Unit {
+        return {
+            Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { intent ->
+                intent.resolveActivity(packageManager)?.also {
+                    Toast.makeText(applicationContext, "Take a picture", Toast.LENGTH_SHORT).also { toast ->
+                        toast.show()
+                    }
+                    startActivityForResult(intent, IMAGE_REQUEST_CODE)
+                }
+            }
         }
     }
 
