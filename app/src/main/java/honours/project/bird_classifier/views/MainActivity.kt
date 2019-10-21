@@ -1,40 +1,73 @@
 package honours.project.bird_classifier.views
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
-import android.hardware.camera2.CameraManager
 import android.provider.MediaStore
 import android.view.View
 import android.widget.Toast
+import androidx.core.content.FileProvider
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.theartofdev.edmodo.cropper.CropImage
+import com.theartofdev.edmodo.cropper.CropImageView
+import honours.project.bird_classifier.tools.*
 import honours.project.bird_classifier.R
 
 import kotlinx.android.synthetic.main.activity_main.*
 import net.steamcrafted.materialiconlib.MaterialDrawableBuilder
+import java.io.File
 
 class MainActivity : AppCompatActivity() {
 
     private val PERMISSION_REQUEST_CODE = 0
-    private val IMAGE_REQUEST_CODE = 1
-    private val PERMISSION_MAP = mutableMapOf(android.Manifest.permission.CAMERA to false)
+    private val TAKE_IMG_REQUEST_CODE = 1
+    private val LOAD_IMG_REQUEST_CODE = 2
+    private val PERMISSION_MAP = mutableMapOf(
+        android.Manifest.permission.CAMERA to false,
+        android.Manifest.permission.WRITE_EXTERNAL_STORAGE to false,
+        android.Manifest.permission.READ_EXTERNAL_STORAGE to false
+    )
 
+    private var currentImgUri: Uri? = null
+
+    companion object {
+        private val CURRENT_IMG_URI = "CURRENT_IMG_URI"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        setupCameraButton(applicationContext)
+        setupFloatingButtons(applicationContext)
 
         checkPermissions()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        outState?.run {
+            currentImgUri?.let {
+                putString(CURRENT_IMG_URI, currentImgUri.toString())
+            }
+        }
+
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        savedInstanceState?.run {
+            currentImgUri = Uri.parse(getString(CURRENT_IMG_URI))
+        }
+
+        super.onRestoreInstanceState(savedInstanceState)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -68,27 +101,80 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupCameraButton(context: Context) {
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when(requestCode) {
+            TAKE_IMG_REQUEST_CODE -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    Toast.makeText(applicationContext, "Success", Toast.LENGTH_LONG).show()
+                    currentImgUri?.let { imgUri ->
+                        startCropActivity(imgUri)
+                    }
+                }
+            }
+            LOAD_IMG_REQUEST_CODE -> {
+                if (resultCode == Activity.RESULT_OK) {
+                    Toast.makeText(applicationContext, "Loaded image", Toast.LENGTH_LONG).show()
+                    val imgUri: Uri? = data?.data
+                    imgUri?.let { imgUri ->
+                        startCropActivity(imgUri)
+                    }
+                }
+            }
+            else -> {}
+        }
+    }
+
+    private fun startCropActivity(imgUri: Uri) =
+        CropImage.activity(imgUri)
+            .setGuidelines(CropImageView.Guidelines.ON)
+            .start(this)
+
+    private fun setupFloatingButtons(context: Context) {
         val cameraButton: FloatingActionButton = findViewById(R.id.camera_button)
         val cameraIcon: Drawable = MaterialDrawableBuilder.with(context)
             .setIcon(MaterialDrawableBuilder.IconValue.CAMERA)
             .setColor(Color.WHITE)
             .setToActionbarSize()
             .build()
+        val loadButton: FloatingActionButton = findViewById(R.id.load_button)
+        val galleryIcon: Drawable = MaterialDrawableBuilder.with(context)
+            .setIcon(MaterialDrawableBuilder.IconValue.CAMERA_IMAGE)
+            .setColor(Color.WHITE)
+            .setToActionbarSize()
+            .build()
 
         cameraButton.setImageDrawable(cameraIcon)
         cameraButton.setOnClickListener(getCameraButtonListener())
+
+        loadButton.setImageDrawable(galleryIcon)
+        loadButton.setOnClickListener(getGalleryLoadButtonListener())
     }
 
     private fun getCameraButtonListener(): (View) -> Unit {
         return {
             Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { intent ->
                 intent.resolveActivity(packageManager)?.also {
-                    Toast.makeText(applicationContext, "Take a picture", Toast.LENGTH_SHORT).also { toast ->
-                        toast.show()
+                    val file: File? = createFile()
+                    file?.let {
+                        currentImgUri = FileProvider.getUriForFile(
+                            this,
+                            "honours.project.bird_classifier.fileprovider",
+                            it)
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, currentImgUri)
+                        startActivityForResult(intent, TAKE_IMG_REQUEST_CODE)
                     }
-                    startActivityForResult(intent, IMAGE_REQUEST_CODE)
                 }
+            }
+        }
+    }
+
+    private fun getGalleryLoadButtonListener(): (View) -> Unit {
+        return {
+            val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = "image/*"
+            }
+            intent.resolveActivity(packageManager)?.let {
+                startActivityForResult(intent, LOAD_IMG_REQUEST_CODE)
             }
         }
     }
@@ -100,15 +186,12 @@ class MainActivity : AppCompatActivity() {
             if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 permissionsToRequest.add(permission)
             } else {
-                PERMISSION_MAP.put(permission, true)
+                PERMISSION_MAP[permission] = true
             }
         }
 
         if (permissionsToRequest.isNotEmpty()) {
             requestPermissions(permissionsToRequest.toTypedArray(), PERMISSION_REQUEST_CODE)
         }
-    }
-
-    private fun openCamera() {
     }
 }
