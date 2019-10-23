@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -12,11 +13,13 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.theartofdev.edmodo.cropper.CropImage
+import com.theartofdev.edmodo.cropper.CropImageActivity
 import com.theartofdev.edmodo.cropper.CropImageView
 import honours.project.bird_classifier.tools.*
 import honours.project.bird_classifier.R
@@ -24,6 +27,7 @@ import honours.project.bird_classifier.R
 import kotlinx.android.synthetic.main.activity_main.*
 import net.steamcrafted.materialiconlib.MaterialDrawableBuilder
 import java.io.File
+import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     )
 
     private var currentImgUri: Uri? = null
+    private var birdClassifier: BirdClassfier? = null
 
     companion object {
         private val CURRENT_IMG_URI = "CURRENT_IMG_URI"
@@ -46,6 +51,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+
+        birdClassifier = BirdClassfier(assets, resources)
 
         setupFloatingButtons(applicationContext)
 
@@ -120,6 +127,22 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE -> {
+                val result: CropImage.ActivityResult = CropImage.getActivityResult(data)
+                if (resultCode == Activity.RESULT_OK) {
+                    val uri = result.uri
+                    var bitmap: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
+
+                    // resize bitmap to the required input size for the CNN
+                    val targetSize = resources.getInteger(R.integer.input_size)
+                    bitmap = Bitmap.createScaledBitmap(bitmap, targetSize, targetSize, true)
+
+                    birdClassifier?.classifyImage(bitmap)
+                } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                    val error: Exception = result.error
+                    print(error)
+                }
+            }
             else -> {}
         }
     }
@@ -171,7 +194,7 @@ class MainActivity : AppCompatActivity() {
     private fun getGalleryLoadButtonListener(): (View) -> Unit {
         return {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-            type = "image/*"
+                type = "image/*"
             }
             intent.resolveActivity(packageManager)?.let {
                 startActivityForResult(intent, LOAD_IMG_REQUEST_CODE)

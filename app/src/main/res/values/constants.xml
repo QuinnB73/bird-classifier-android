@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="model_path">trained_model.tflite</string>
+    <string name="labels_path">cat.txt</string>
+    <integer name="input_size">256</integer>
+    <integer name="batch_size">1</integer>
+</resources>
