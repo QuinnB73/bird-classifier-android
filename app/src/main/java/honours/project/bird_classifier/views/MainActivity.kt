@@ -13,27 +13,31 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.provider.MediaStore
-import android.util.Log
 import android.view.View
+import android.widget.ListView
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.theartofdev.edmodo.cropper.CropImage
-import com.theartofdev.edmodo.cropper.CropImageActivity
 import com.theartofdev.edmodo.cropper.CropImageView
 import honours.project.bird_classifier.tools.*
 import honours.project.bird_classifier.R
+import honours.project.bird_classifier.asyncTasks.ClassifierTaskHandler
 
 import kotlinx.android.synthetic.main.activity_main.*
 import net.steamcrafted.materialiconlib.MaterialDrawableBuilder
 import java.io.File
 import java.lang.Exception
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
 
-    private val PERMISSION_REQUEST_CODE = 0
-    private val TAKE_IMG_REQUEST_CODE = 1
-    private val LOAD_IMG_REQUEST_CODE = 2
+    companion object {
+        private const val PERMISSION_REQUEST_CODE = 0
+        private const val TAKE_IMG_REQUEST_CODE = 1
+        private const val LOAD_IMG_REQUEST_CODE = 2
+        private const val CURRENT_IMG_URI = "CURRENT_IMG_URI"
+    }
+
     private val PERMISSION_MAP = mutableMapOf(
         android.Manifest.permission.CAMERA to false,
         android.Manifest.permission.WRITE_EXTERNAL_STORAGE to false,
@@ -41,18 +45,17 @@ class MainActivity : AppCompatActivity() {
     )
 
     private var currentImgUri: Uri? = null
-    private var birdClassifier: BirdClassfier? = null
+    private var birdController: BirdController? = null
 
-    companion object {
-        private val CURRENT_IMG_URI = "CURRENT_IMG_URI"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+        val listView: ListView = findViewById(R.id.birds_list)
 
-        birdClassifier = BirdClassfier(assets, resources)
+        birdController = BirdController(assets, resources)
+        birdController?.setupBirdList(listView, applicationContext)
 
         setupFloatingButtons(applicationContext)
 
@@ -114,6 +117,7 @@ class MainActivity : AppCompatActivity() {
                 if (resultCode == Activity.RESULT_OK) {
                     Toast.makeText(applicationContext, "Success", Toast.LENGTH_LONG).show()
                     currentImgUri?.let { imgUri ->
+                        updateGallery(imgUri, applicationContext)
                         startCropActivity(imgUri)
                     }
                 }
@@ -137,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                     val targetSize = resources.getInteger(R.integer.input_size)
                     bitmap = Bitmap.createScaledBitmap(bitmap, targetSize, targetSize, true)
 
-                    birdClassifier?.classifyImage(bitmap)
+                    birdController?.classifyImage(bitmap, this)
                 } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                     val error: Exception = result.error
                     print(error)
@@ -145,6 +149,11 @@ class MainActivity : AppCompatActivity() {
             }
             else -> {}
         }
+    }
+
+    override fun onComplete(identifiedBird: String) {
+        Toast.makeText(applicationContext, "Found bird: $identifiedBird", Toast.LENGTH_LONG).show()
+        birdController?.startActivityForBird(identifiedBird, applicationContext)
     }
 
     private fun startCropActivity(imgUri: Uri) =

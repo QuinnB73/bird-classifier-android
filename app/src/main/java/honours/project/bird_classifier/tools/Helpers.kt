@@ -2,12 +2,18 @@ package honours.project.bird_classifier.tools
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.AssetManager
+import android.content.res.Resources
 import android.net.Uri
 import android.os.Environment
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
+import honours.project.bird_classifier.R
+import java.io.BufferedReader
 import java.io.File
 import java.io.IOException
+import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -31,10 +37,10 @@ fun createFile(): File? {
     return File.createTempFile(filename, ".jpg", customDir)
 }
 
-fun updateGallery(path: String, context: Context) {
+fun updateGallery(imgUri: Uri, context: Context) {
     Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE).also { intent ->
-        val file = File(path)
-        intent.data = Uri.fromFile(file)
+        intent.data = imgUri
         context.sendBroadcast(intent)
     }
 }
+

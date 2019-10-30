@@ -1,4 +1,32 @@
 <resources>
     <string name="app_name">bird_classifier</string>
     <string name="action_settings">Settings</string>
+    <string name="bird_name"><b>Name: </b></string>
+    <string name="bird_location"><b>Location: </b>North America</string>
+    <string name="bird_description"><b>Checkout this link for more info: </b></string>
+
+    <string name="black_capped_chickadee_credit">By No machine-readable author provided. Mdf assumed (based on copyright claims). - No machine-readable source provided. Own work assumed (based on copyright claims)., CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=485077</string>
+    <string name="downy_woodpecker_credit">By Wolfgang Wander - self-made / http://www.pbase.com/wwcsig/image/77075634, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=3112981</string>
+    <string name="dark_eyed_junco_credit">By Cephas - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=15088746</string>
+    <string name="american_goldfinch_credit">By Breck22 - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=32276284</string>
+    <string name="song_sparrow_credit">By Mdf - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=393077</string>
+    <string name="brown_headed_cowbird_credit">By Bear golden retriever from auburn,ny, usa - 04.27.09Uploaded by berichard, CC BY 2.0, https://commons.wikimedia.org/w/index.php?curid=6658370</string>
+    <string name="blue_jay_credit">By Mdf - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=1406880</string>
+    <string name="white_breasted_nuthatch_credit">By http://www.naturespicsonline.com/ - http://www.naturespicsonline.com/, CC BY-SA 2.5, https://commons.wikimedia.org/w/index.php?curid=970105</string>
+    <string name="mourning_dove_credit">By http://www.naturespicsonline.com/ - http://www.naturespicsonline.com/galleries/Nature15/_mg_8449a.htm, CC BY-SA 2.5, https://commons.wikimedia.org/w/index.php?curid=1083262</string>
+    <string name="northern_cardinal_credit">By Hari Krishnan - Own work, CC BY-SA 4.0, https://commons.wikimedia.org/w/index.php?curid=76166416</string>
+    <string name="red_breasted_nuthatch_credit">By Cephas - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=9645313</string>
+    <string name="red_winged_blackbird_credit">By Walter Siegmund (talk) - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=5941742</string>
+
+    <string name="black_capped_chickadee_link">https://www.allaboutbirds.org/guide/Black-capped_Chickadee</string>
+    <string name="downy_woodpecker_link">https://www.allaboutbirds.org/guide/Downy_Woodpecker</string>
+    <string name="dark_eyed_junco_link">https://www.allaboutbirds.org/guide/Dark-eyed_Junco/</string>
+    <string name="american_goldfinch_link">https://www.allaboutbirds.org/guide/American_Goldfinch</string>
+    <string name="song_sparrow_link">https://www.allaboutbirds.org/guide/Song_Sparrow</string>
+    <string name="brown_headed_cowbird_link">https://www.allaboutbirds.org/guide/Brown-Headed_Cowbird</string>
+    <string name="blue_jay_link">https://www.allaboutbirds.org/guide/Blue_Jay</string>
+    <string name="white_breasted_nuthatch_link">https://www.allaboutbirds.org/guide/White-Breasted_Nuthatch</string>
+    <string name="mourning_dove_link">https://www.allaboutbirds.org/guide/Mourning_Dove</string>
+    <string name="red_breasted_nuthatch_link">https://www.allaboutbirds.org/guide/Red-Breasted_Nuthatch</string>
+    <string name="red_winged_blackbird_link">https://www.allaboutbirds.org/guide/Red-Winged_Blackbird</string>
 </resources>
