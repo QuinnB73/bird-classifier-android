@@ -17,6 +17,19 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
+/**
+ * The logic controller of the application
+ *
+ * @param assetManager The AssetManager to give to the BirdClassifier to load the TensorFlow Lite
+ *                     model and to use to load the categories file provided in the assets folder
+ * @param resources The ResourceManager to use to setup Bird objects, load categories, and give to
+ *                  the BirdClassifier object
+ * @param context The Context to give to Bird objects when initializing them
+ *
+ * @constructor Loads all categories from the assets file, creates a BirdClassifier object for
+ *              for later classification, and initializes Bird objects for every bird found in the
+ *              categories
+ */
 class BirdController(assetManager: AssetManager, private val resources: Resources,
                      private val context: Context) {
     companion object {
@@ -43,6 +56,13 @@ class BirdController(assetManager: AssetManager, private val resources: Resource
         }
     }
 
+    /**
+     * Sets the adapter for the ListView passed in. Also sets the onClickListener for each list
+     * item.
+     *
+     * @param listView The ListView to set the adapter for
+     * @param context The Context to use to start a new activity when a list item is clicked
+     */
     fun setupBirdList(listView: ListView, context: Context) {
         val birdList: MutableList<Bird> = birdMap.values.sortedBy{ it.name }.toMutableList()
         val birdListAdapter = BirdArrayAdapter(context, R.layout.bird_list_item, birdList)
@@ -56,10 +76,25 @@ class BirdController(assetManager: AssetManager, private val resources: Resource
         }
     }
 
+    /**
+     * Classify an image using the BirdClassifier object
+     *
+     * @param imgUri The URI of the image to classify
+     * @param contentResolver The ContentResolver to use to read the image
+     * @param handler The object to notify of the completion of the classification
+     */
     fun classifyImage(imgUri: Uri, contentResolver: ContentResolver, handler: ClassifierTaskHandler) {
         birdClassifier.classifyImage(imgUri, contentResolver, handler)
     }
 
+    /**
+     * Load the categories in the assets file into a list of strings
+     *
+     * @param assetManager The AssetManager to use to load the categories
+     * @param resources The ResourcesManager to use to get the path to the categories file
+     *
+     * @return A list of strings containing the categories found in the file
+     */
     private fun loadCategories(assetManager: AssetManager, resources: Resources): List<String> {
         val labels: MutableList<String> = mutableListOf()
         val labelsFileFullPath = resources.getString(R.string.labels_path)
@@ -85,6 +120,17 @@ class BirdController(assetManager: AssetManager, private val resources: Resource
         }
     }
 
+    /**
+     * Start an activity for the bird identified by the passed in name.
+     *
+     * @param name The name of the bird that identifies which Bird object to give to the activity
+     * @param probability The CNN's confidence that the identified bird was correct. Only
+     *                    applicable if the activity is started due to a classification. If started
+     *                    via a click on a ListView item, probability should be < 0.
+     * @param imgUri The URI of the image to display in the activity. If one is not provided, (i.e
+     *               null is passed in), a default image will be used.
+     * @param context The Context used to start the activity
+     */
     fun startActivityForBird(name: String, probability: Float, imgUri: Uri?, context: Context) {
         val bird = birdMap[name]
 

@@ -8,6 +8,19 @@ import org.tensorflow.lite.Interpreter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
+/**
+ * This class is an AsyncTask for classifying images using the provided CNN and the TensorFlow Lite
+ * library in the background.
+ *
+ * @constructor Initializes a ByteBuffer for the image pixel data
+ *
+ * @param interpreter The TensorFlow Lite interpreter to use to classify the image data
+ * @param labels The labels that correspond with the output
+ * @param imgSize The image input size of the CNN
+ * @param batchSize The batch size to use. Should be 1.
+ * @param handler The object to pass the result to on completion
+ * @param imgUri The URI of the image being classified
+ */
 class ClassifierTask(private val interpreter: Interpreter,
                      private val labels: List<String>,
                      imgSize: Int, batchSize: Int,
@@ -19,6 +32,12 @@ class ClassifierTask(private val interpreter: Interpreter,
         private const val TAG = "CLASSIFIER_ASYNC_TASK"
     }
 
+    /**
+     * Inner class to wrap the result of the classification into an object
+     *
+     * @param identifiedBird The bird that was identified
+     * @param probability The output of the CNN layer that corresponds with the bird
+     */
     class ClassifierResult(val identifiedBird: String?, val probability: Float?)
 
     private val pixels: ByteBuffer?
@@ -77,6 +96,13 @@ class ClassifierTask(private val interpreter: Interpreter,
         }
     }
 
+    /**
+     * Load Bitmap data into a ByteBuffer storing the pixel data. This was adapted from the code in
+     * this example from TensorFlow:
+     * https://github.com/tensorflow/examples/tree/master/lite/examples/image_classification/android
+     *
+     * @param img The Bitmap data to load into the ByteBuffer
+     */
     private fun loadImageIntoPixelByteBuffer(img: Bitmap) {
         pixels?.rewind()
         val size = img.height * img.width

@@ -17,10 +17,19 @@ import java.io.InputStreamReader
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * This file provides helpers that don't necessarily belong to an object.
+ */
 
+/**
+ * This function creates a file in the custom directory identified by R.string.custom_dir
+ *
+ * @return The created file
+ * @throws IOException If unable to create the file
+ */
 @Throws(IOException::class)
-fun createFile(): File? {
-    val dirName = "bird_images"
+fun createFile(resources: Resources): File? {
+    val dirName = resources.getString(R.string.custom_dir)
     val customDir = File(Environment.getExternalStorageDirectory(), dirName)
 
     // Create the directory if it doesn't exist
@@ -37,6 +46,13 @@ fun createFile(): File? {
     return File.createTempFile(filename, ".jpg", customDir)
 }
 
+/**
+ * Send a broadcast intent to update the phone's photo gallery with photos taken at the imgUri
+ * passed in
+ *
+ * @param imgUri The URI of the image to make the gallery aware of
+ * @param context The Context used to send the broadcast intent
+ */
 fun updateGallery(imgUri: Uri, context: Context) {
     Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE).also { intent ->
         intent.data = imgUri

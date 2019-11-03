@@ -18,7 +18,15 @@ import java.nio.ByteOrder
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
 
-// Adapted from https://www.tensorflow.org/lite/models/image_classification/android
+/**
+ * Sets up the TensorFlow Lite Interpreter for the TensorFlow Lite model.
+ *
+ * @param assetManager The AssetManager used to load the model in the assets directory
+ * @param resources The ResourcesManager used to load resources
+ * @param labels The categories to classify images into
+ *
+ * @constructor Loads the model file and sets up a TensorFlow Lite Interpreter.
+ */
 class BirdClassifier(private val assetManager: AssetManager, private val resources: Resources,
                      private val labels: List<String>) {
     companion object {
@@ -42,6 +50,13 @@ class BirdClassifier(private val assetManager: AssetManager, private val resourc
         }
     }
 
+    /**
+     * Load the model file from the assets
+     *
+     * @param modelFile The path to the model in the assets folder
+     *
+     * @return A MappedByteBuffer of the entire file, read only
+     */
     private fun loadModelFile(modelFile: String): MappedByteBuffer {
         val fileDescriptor = assetManager.openFd(modelFile)
         val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
@@ -53,6 +68,14 @@ class BirdClassifier(private val assetManager: AssetManager, private val resourc
         )
     }
 
+    /**
+     * Classify the image provided, have the result be passed to the handler provided. This process
+     * is asynchronous using the ClassifierTask.
+     *
+     * @param imgUri The URI of the image to be classified
+     * @param contentResolver The ContentResolver to use to load the image into a Bitmap
+     * @param handler The handler to notify on completion
+     */
     fun classifyImage(imgUri: Uri, contentResolver: ContentResolver, handler: ClassifierTaskHandler) {
         interpreter?.let {
             val imgSize = resources.getInteger(R.integer.input_size)

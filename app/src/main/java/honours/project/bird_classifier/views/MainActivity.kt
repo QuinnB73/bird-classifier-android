@@ -30,6 +30,9 @@ import net.steamcrafted.materialiconlib.MaterialDrawableBuilder
 import java.io.File
 import java.lang.Exception
 
+/**
+ * The main activity
+ */
 class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
 
     companion object {
@@ -157,11 +160,21 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
         birdController?.startActivityForBird(identifiedBird, probability, imgUri, applicationContext)
     }
 
+    /**
+     * Start the CropImageActivity from the Android Image Cropper library
+     *
+     * @param imgUri The URI of the image to crop
+     */
     private fun startCropActivity(imgUri: Uri) =
         CropImage.activity(imgUri)
             .setGuidelines(CropImageView.Guidelines.ON)
             .start(this)
 
+    /**
+     * Set up the two floating buttons; the camera button and the load image button.
+     *
+     * @param context The Context to use when setting up drawable icons
+     */
     private fun setupFloatingButtons(context: Context) {
         val cameraButton: FloatingActionButton = findViewById(R.id.camera_button)
         val cameraIcon: Drawable = MaterialDrawableBuilder.with(context)
@@ -183,11 +196,16 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
         loadButton.setOnClickListener(getGalleryLoadButtonListener())
     }
 
+    /**
+     * Get a listener for the camera FAB
+     *
+     * @return A function that takes in a View as a parameter and does not return anything
+     */
     private fun getCameraButtonListener(): (View) -> Unit {
         return {
             Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { intent ->
                 intent.resolveActivity(packageManager)?.also {
-                    val file: File? = createFile()
+                    val file: File? = createFile(resources)
                     file?.let {
                         currentImgUri = FileProvider.getUriForFile(
                             this,
@@ -201,6 +219,11 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
         }
     }
 
+    /**
+     * Get a listener for the image load button FAB
+     *
+     * @return A function that takes in a View as a parameter and does not return anything
+     */
     private fun getGalleryLoadButtonListener(): (View) -> Unit {
         return {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -212,6 +235,9 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
         }
     }
 
+    /**
+     * Check the permissions of the application
+     */
     private fun checkPermissions() {
         val permissionsToRequest = mutableListOf<String>()
 
