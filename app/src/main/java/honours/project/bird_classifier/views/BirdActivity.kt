@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.service.autofill.TextValueSanitizer
+import android.text.Html
+import android.text.method.LinkMovementMethod
 import android.util.Log
 import android.widget.ImageView
 import android.widget.TextView
@@ -44,6 +46,12 @@ class BirdActivity: AppCompatActivity() {
         val photoCredit: TextView = findViewById(R.id.photo_credit)
         val link: TextView = findViewById(R.id.bird_description)
 
+        setupImageAndCredit(bird, image, imgUri, photoCredit)
+        setupConfidenceText(probability, confidence)
+        setupLink(bird, link)
+    }
+
+    private fun setupImageAndCredit(bird: Bird, image: ImageView, imgUri: Uri?, photoCredit: TextView) {
         try {
             if (imgUri != null) {
                 image.setImageURI(imgUri)
@@ -57,10 +65,20 @@ class BirdActivity: AppCompatActivity() {
         } catch (error: Exception) {
             Log.e(TAG, "Unable to load image: $error")
         }
+    }
 
-        val confidenceString: String = if (probability > 0) probability.toString() else "N/A"
+    private fun setupConfidenceText(probability: Float, confidence: TextView) {
+        var confidenceString = "N/A"
+        if (probability > 0) {
+            confidenceString = "%.2f".format((probability * 100)) + "%"
+        }
         confidence.append(confidenceString)
+    }
 
-        link.append(bird.link)
+    private fun setupLink(bird: Bird, link: TextView) {
+        val linkStr = "<a href=\"${bird.link}\">${bird.displayName}</a>"
+        link.isClickable = true
+        link.movementMethod = LinkMovementMethod.getInstance()
+        link.append(Html.fromHtml(linkStr, Html.FROM_HTML_MODE_LEGACY))
     }
 }
