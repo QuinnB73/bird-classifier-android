@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.Menu
 import android.view.MenuItem
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.ListView
 import android.widget.Toast
@@ -32,6 +33,7 @@ import java.lang.Exception
 class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
 
     companion object {
+        private const val TAG = "MAIN_ACTIVITY"
         private const val PERMISSION_REQUEST_CODE = 0
         private const val TAKE_IMG_REQUEST_CODE = 1
         private const val LOAD_IMG_REQUEST_CODE = 2
@@ -54,7 +56,7 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
         setSupportActionBar(toolbar)
         val listView: ListView = findViewById(R.id.birds_list)
 
-        birdController = BirdController(assets, resources)
+        birdController = BirdController(assets, resources, applicationContext)
         birdController?.setupBirdList(listView, applicationContext)
 
         setupFloatingButtons(applicationContext)
@@ -74,7 +76,11 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         savedInstanceState?.run {
-            currentImgUri = Uri.parse(getString(CURRENT_IMG_URI))
+            try {
+                currentImgUri = Uri.parse(getString(CURRENT_IMG_URI))
+            } catch (error: Exception) {
+                Log.e(TAG, error.localizedMessage)
+            }
         }
 
         super.onRestoreInstanceState(savedInstanceState)
@@ -126,8 +132,8 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
                 if (resultCode == Activity.RESULT_OK) {
                     Toast.makeText(applicationContext, "Loaded image", Toast.LENGTH_LONG).show()
                     val imgUri: Uri? = data?.data
-                    imgUri?.let { imgUri ->
-                        startCropActivity(imgUri)
+                    imgUri?.let { it ->
+                        startCropActivity(it)
                     }
                 }
             }
@@ -135,25 +141,20 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
                 val result: CropImage.ActivityResult = CropImage.getActivityResult(data)
                 if (resultCode == Activity.RESULT_OK) {
                     val uri = result.uri
-                    var bitmap: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, uri)
 
-                    // resize bitmap to the required input size for the CNN
-                    val targetSize = resources.getInteger(R.integer.input_size)
-                    bitmap = Bitmap.createScaledBitmap(bitmap, targetSize, targetSize, true)
-
-                    birdController?.classifyImage(bitmap, this)
+                    birdController?.classifyImage(uri, contentResolver, this)
                 } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
                     val error: Exception = result.error
-                    print(error)
+                    Log.e(TAG, error.localizedMessage)
                 }
             }
             else -> {}
         }
     }
 
-    override fun onComplete(identifiedBird: String) {
+    override fun onComplete(identifiedBird: String, probability: Float, imgUri: Uri) {
         Toast.makeText(applicationContext, "Found bird: $identifiedBird", Toast.LENGTH_LONG).show()
-        birdController?.startActivityForBird(identifiedBird, applicationContext)
+        birdController?.startActivityForBird(identifiedBird, probability, imgUri, applicationContext)
     }
 
     private fun startCropActivity(imgUri: Uri) =

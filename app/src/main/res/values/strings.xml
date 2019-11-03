@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">bird_classifier</string>
     <string name="action_settings">Settings</string>
-    <string name="bird_name"><b>Name: </b></string>
+    <string name="bird_confidence"><b>Probability: </b></string>
     <string name="bird_location"><b>Location: </b>North America</string>
     <string name="bird_description"><b>Checkout this link for more info: </b></string>
 
@@ -27,6 +27,7 @@
     <string name="blue_jay_link">https://www.allaboutbirds.org/guide/Blue_Jay</string>
     <string name="white_breasted_nuthatch_link">https://www.allaboutbirds.org/guide/White-Breasted_Nuthatch</string>
     <string name="mourning_dove_link">https://www.allaboutbirds.org/guide/Mourning_Dove</string>
+    <string name="northern_cardinal_link">https://www.allaboutbirds.org/guide/Northern_Cardinal</string>
     <string name="red_breasted_nuthatch_link">https://www.allaboutbirds.org/guide/Red-Breasted_Nuthatch</string>
     <string name="red_winged_blackbird_link">https://www.allaboutbirds.org/guide/Red-Winged_Blackbird</string>
 </resources>

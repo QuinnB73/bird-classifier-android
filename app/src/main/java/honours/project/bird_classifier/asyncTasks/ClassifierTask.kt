@@ -1,19 +1,25 @@
 package honours.project.bird_classifier.asyncTasks
 
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.AsyncTask
 import android.util.Log
 import org.tensorflow.lite.Interpreter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class ClassifierTask(val interpreter: Interpreter, val labels: List<String>,
-                     imgSize: Int, batchSize: Int, val handler: ClassifierTaskHandler):
-        AsyncTask<Bitmap, Int, String?>() {
+class ClassifierTask(private val interpreter: Interpreter,
+                     private val labels: List<String>,
+                     imgSize: Int, batchSize: Int,
+                     private val handler: ClassifierTaskHandler,
+                     private val imgUri: Uri):
+        AsyncTask<Bitmap, Int, ClassifierTask.ClassifierResult?>() {
 
     companion object {
         private const val TAG = "CLASSIFIER_ASYNC_TASK"
     }
+
+    class ClassifierResult(val identifiedBird: String?, val probability: Float?)
 
     private val pixels: ByteBuffer?
 
@@ -23,7 +29,7 @@ class ClassifierTask(val interpreter: Interpreter, val labels: List<String>,
         pixels!!.order(ByteOrder.nativeOrder())
     }
 
-    override fun doInBackground(vararg images: Bitmap?): String? {
+    override fun doInBackground(vararg images: Bitmap?): ClassifierResult? {
         if (images.size != 1) {
             Log.e(TAG, "Invalid argument passed to async classification task")
             return null
@@ -38,6 +44,7 @@ class ClassifierTask(val interpreter: Interpreter, val labels: List<String>,
 
         val categoryProbabilities = Array(1){ FloatArray(labels.size) }
         var identifiedBird = "Not found"
+        var probability = 0.0f
 
         interpreter.run(pixels, categoryProbabilities)
 
@@ -55,16 +62,19 @@ class ClassifierTask(val interpreter: Interpreter, val labels: List<String>,
             }
 
             identifiedBird = if (maxIndex > -1) labels[maxIndex] else identifiedBird
+            probability = if (maxValue > -1) maxValue else probability
             Log.d(TAG, "Identified bird: $identifiedBird")
         }
-        return identifiedBird
+        return ClassifierResult(identifiedBird, probability)
     }
 
-    override fun onPostExecute(result: String?) {
-        val resultToPass: String = result ?: "Not found"
-        Log.d(TAG, "Passing result to handler $resultToPass")
-
-        handler.onComplete(resultToPass)
+    override fun onPostExecute(result: ClassifierResult?) {
+        Log.d(TAG, "Result to pass to handler $result")
+        result?.let {
+            if (it.identifiedBird != null && it.probability != null) {
+                handler.onComplete(it.identifiedBird, it.probability, imgUri)
+            }
+        }
     }
 
     private fun loadImageIntoPixelByteBuffer(img: Bitmap) {

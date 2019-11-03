@@ -1,10 +1,12 @@
 package honours.project.bird_classifier.tools
 
+import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.graphics.Bitmap
+import android.net.Uri
 import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.ListView
@@ -15,10 +17,13 @@ import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
-class BirdController(assetManager: AssetManager, resources: Resources) {
+class BirdController(assetManager: AssetManager, private val resources: Resources,
+                     private val context: Context) {
     companion object {
         private const val TAG = "BIRD_CONTROLLER"
         const val BIRD_EXTRA = "BIRD_EXTRA"
+        const val PROB_EXTRA = "PROB_EXTRA"
+        const val IMG_URI_EXTRA = "IMG_EXTRA"
     }
     private val birdMap: MutableMap<String, Bird> = mutableMapOf()
     private val labels: List<String> = loadCategories(assetManager, resources)
@@ -33,25 +38,26 @@ class BirdController(assetManager: AssetManager, resources: Resources) {
 
         labels.forEach { birdName ->
             val bird = Bird(birdName)
+            bird.setupBirdProperties(resources, context)
             birdMap[birdName] = bird
         }
     }
 
     fun setupBirdList(listView: ListView, context: Context) {
-        val birdListAdapter: BirdArrayAdapter =
-            BirdArrayAdapter(context, R.layout.bird_list_item, birdMap.values.toMutableList())
+        val birdList: MutableList<Bird> = birdMap.values.sortedBy{ it.name }.toMutableList()
+        val birdListAdapter = BirdArrayAdapter(context, R.layout.bird_list_item, birdList)
 
         listView.adapter = birdListAdapter
         listView.setOnItemClickListener { _, _, position, _ ->
             val bird = birdListAdapter.getItem(position)
             bird?.let {
-                startActivityForBird(it.name, context)
+                startActivityForBird(it.name, -1.0f, null, context)
             }
         }
     }
 
-    fun classifyImage(img: Bitmap, handler: ClassifierTaskHandler) {
-        birdClassifier.classifyImage(img, handler)
+    fun classifyImage(imgUri: Uri, contentResolver: ContentResolver, handler: ClassifierTaskHandler) {
+        birdClassifier.classifyImage(imgUri, contentResolver, handler)
     }
 
     private fun loadCategories(assetManager: AssetManager, resources: Resources): List<String> {
@@ -79,7 +85,7 @@ class BirdController(assetManager: AssetManager, resources: Resources) {
         }
     }
 
-    fun startActivityForBird(name: String, context: Context) {
+    fun startActivityForBird(name: String, probability: Float, imgUri: Uri?, context: Context) {
         val bird = birdMap[name]
 
         if (bird == null) {
@@ -89,6 +95,10 @@ class BirdController(assetManager: AssetManager, resources: Resources) {
 
         val intent = Intent(context, BirdActivity::class.java).apply {
             putExtra(BIRD_EXTRA, bird)
+            putExtra(PROB_EXTRA, probability)
+            imgUri?.let {
+                putExtra(IMG_URI_EXTRA, it.toString())
+            }
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)

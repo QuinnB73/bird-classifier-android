@@ -1,8 +1,11 @@
 package honours.project.bird_classifier.tools
 
+import android.content.ContentResolver
 import android.content.res.AssetManager
 import android.content.res.Resources
 import android.graphics.Bitmap
+import android.net.Uri
+import android.provider.MediaStore
 import android.util.Log
 import honours.project.bird_classifier.R
 import honours.project.bird_classifier.asyncTasks.ClassifierTask
@@ -23,8 +26,6 @@ class BirdClassifier(private val assetManager: AssetManager, private val resourc
     }
 
     private var interpreter: Interpreter? = null
-    private var pixels: ByteBuffer? = null
-    private var categoryProbabilities: Array<FloatArray>? = null
 
     init {
         val modelFile = resources.getString(R.string.model_path)
@@ -52,13 +53,17 @@ class BirdClassifier(private val assetManager: AssetManager, private val resourc
         )
     }
 
-    fun classifyImage(img: Bitmap, handler: ClassifierTaskHandler) {
+    fun classifyImage(imgUri: Uri, contentResolver: ContentResolver, handler: ClassifierTaskHandler) {
         interpreter?.let {
             val imgSize = resources.getInteger(R.integer.input_size)
             val batchSize = resources.getInteger(R.integer.batch_size)
+            var bitmap: Bitmap = MediaStore.Images.Media.getBitmap(contentResolver, imgUri)
 
-            val classifierTask = ClassifierTask(it, labels, imgSize, batchSize, handler)
-            classifierTask.execute(img)
+            // resize bitmap to the required input size for the CNN
+            bitmap = Bitmap.createScaledBitmap(bitmap, imgSize, imgSize, true)
+
+            val classifierTask = ClassifierTask(it, labels, imgSize, batchSize, handler, imgUri)
+            classifierTask.execute(bitmap)
         }
     }
 }
