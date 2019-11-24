@@ -4,4 +4,5 @@
     <string name="labels_path">cat.txt</string>
     <integer name="input_size">256</integer>
     <integer name="batch_size">1</integer>
+    <string name="popup_elev">50.0</string>
 </resources>

@@ -4,18 +4,17 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import android.view.Menu
-import android.view.MenuItem
 import android.provider.MediaStore
 import android.util.Log
-import android.view.View
+import android.view.*
+import android.widget.LinearLayout
 import android.widget.ListView
+import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -100,7 +99,7 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         return when (item.itemId) {
-            R.id.action_settings -> true
+            R.id.action_help -> handleHelpClicked()
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -113,6 +112,10 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
                 grantResults.forEachIndexed { index, result ->
                     if (result == PackageManager.PERMISSION_GRANTED) {
                         PERMISSION_MAP[permissions[index]] = true
+                    } else {
+                        // Close the application because it cannot function without all of its
+                        // permissions
+                        finishAndRemoveTask()
                     }
                 }
             }
@@ -158,6 +161,29 @@ class MainActivity : AppCompatActivity(), ClassifierTaskHandler {
     override fun onComplete(identifiedBird: String, probability: Float, imgUri: Uri) {
         Toast.makeText(applicationContext, "Found bird: $identifiedBird", Toast.LENGTH_LONG).show()
         birdController?.startActivityForBird(identifiedBird, probability, imgUri, applicationContext)
+    }
+
+    /**
+     * Handles the about menu item being clicked by popping up a window with information about
+     * the app.
+     *
+     * @return true
+     */
+    private fun handleHelpClicked(): Boolean {
+        val rootGroup = findViewById<ViewGroup>(android.R.id.content)
+        val viewRoot = rootGroup.rootView as View
+
+        val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        val popupView = layoutInflater.inflate(R.layout.about, rootGroup, false)
+        val wh = LinearLayout.LayoutParams.WRAP_CONTENT
+        val popupWindow = PopupWindow(popupView, wh, wh, true)
+
+        val elevation = resources.getString(R.string.popup_elev).toFloat()
+        popupWindow.elevation = elevation
+
+        popupWindow.showAtLocation(viewRoot, Gravity.CENTER, 0, 0)
+
+        return true
     }
 
     /**
